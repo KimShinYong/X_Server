@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json()); // json으로 통신하도록 미들웨어에 등록
 
 app.use("/post", postsRouter); // /post로 접근
-app.use("/auth", authRouter);
+app.use("/auth", authRouter); // /auth로 접근
 
 app.use((req, res, next) => {
   res.sendStatus(404);
