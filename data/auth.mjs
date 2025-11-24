@@ -61,3 +61,13 @@ export async function login(userid, password) {
     (user) => user.userid === userid && user.password === password
   );
 }
+
+// 회원 체크
+export async function findByUserid(userid) {
+  return users.find((user) => user.userid === userid);
+}
+
+// ID로 찾기
+export async function findById(id) {
+  return users.find((user) => user.id === id);
+}
