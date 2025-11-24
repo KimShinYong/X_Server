@@ -1,6 +1,7 @@
 import express from "express";
 import postsRouter from "./router/post.mjs";
 import authRouter from "./router/auth.mjs";
+import { config } from "./config.mjs";
 
 const app = express();
 
@@ -13,4 +14,4 @@ app.use((req, res, next) => {
   res.sendStatus(404);
 });
 
-app.listen(8080); // port번호 지정
+app.listen(config.host.port); // port번호 지정
