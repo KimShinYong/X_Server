@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>게시판 숙제</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* ===== 공통 ===== */
+      :root {
+        --bg: #e0e5ec;
+        --card: #e0e5ec;
+        --shadow-dark: #a3b1c6;
+        --shadow-light: #ffffff;
+        --accent: #4a6cf7;
+        --danger: #ff6b6b;
+        --text-main: #333;
+        --text-muted: #777;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text-main);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* ===== 레이아웃 ===== */
+      .app {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+
+      header.app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+
+      .app-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+
+      .user-area {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+      }
+
+      .btn {
+        border: none;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: var(--card);
+        box-shadow: 4px 4px 8px var(--shadow-dark),
+          -4px -4px 8px var(--shadow-light);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 2px 2px 4px var(--shadow-dark),
+          -2px -2px 4px var(--shadow-light);
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+        box-shadow: inset 2px 2px 4px var(--shadow-dark),
+          inset -2px -2px 4px var(--shadow-light);
+      }
+
+      .btn-accent {
+        background: linear-gradient(145deg, #5a7bff, #3f5af0);
+        color: #fff;
+        box-shadow: 4px 4px 10px rgba(63, 90, 240, 0.4), -3px -3px 6px #ffffff;
+      }
+
+      .btn-danger {
+        color: #fff;
+        background: linear-gradient(145deg, #ff8383, #ff5b5b);
+      }
+
+      .user-label {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--card);
+        box-shadow: inset 2px 2px 4px var(--shadow-dark),
+          inset -2px -2px 4px var(--shadow-light);
+      }
+
+      /* ===== 툴바 ===== */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .input {
+        border-radius: 999px;
+        border: none;
+        padding: 8px 12px;
+        background: var(--card);
+        box-shadow: inset 2px 2px 4px var(--shadow-dark),
+          inset -2px -2px 4px var(--shadow-light);
+        outline: none;
+        font-size: 0.9rem;
+        flex: 0 0 200px;
+      }
+
+      .toolbar-right {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+      }
+
+      /* ===== 메시지 ===== */
+      .message-box {
+        margin-bottom: 12px;
+        padding: 10px 14px;
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: inset 2px 2px 4px var(--shadow-dark),
+          inset -2px -2px 4px var(--shadow-light);
+        font-size: 0.85rem;
+        color: var(--text-main);
+      }
+
+      .message-box[data-type="error"] {
+        color: #c53030;
+      }
+      .message-box[data-type="success"] {
+        color: #2f855a;
+      }
+
+      /* ===== 포스트 카드 ===== */
+      .post-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .post-card {
+        position: relative;
+        padding: 14px 16px 12px;
+        border-radius: 18px;
+        background: var(--card);
+        box-shadow: 6px 6px 12px var(--shadow-dark),
+          -6px -6px 12px var(--shadow-light);
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      }
+
+      .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 8px var(--shadow-dark),
+          -4px -4px 8px var(--shadow-light);
+      }
+
+      .post-card__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 8px;
+        font-size: 0.85rem;
+      }
+
+      .post-card__user {
+        font-weight: 600;
+      }
+
+      .post-card__date {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+      }
+
+      .post-card__text {
+        font-size: 0.95rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .post-card__actions {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        display: flex;
+        gap: 6px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+      }
+
+      .post-card:hover .post-card__actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .post-card__btn {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+      }
+
+      .post-empty {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        text-align: center;
+        margin-top: 24px;
+      }
+
+      /* ===== 오버레이 카드 (로그인/회원가입/작성) ===== */
+      .overlay-container {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+
+      .overlay-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.18);
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+
+      .overlay-card {
+        position: relative;
+        width: 100%;
+        max-width: 380px;
+        padding: 24px 22px 18px;
+        border-radius: 24px;
+        background: var(--card);
+        box-shadow: 10px 10px 18px var(--shadow-dark),
+          -10px -10px 18px var(--shadow-light);
+        transform: translateY(20px);
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        pointer-events: auto;
+      }
+
+      .overlay-container.active .overlay-backdrop {
+        opacity: 1;
+      }
+
+      .overlay-container.active .overlay-card {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .overlay-title {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+      }
+
+      .form-group label {
+        padding-left: 4px;
+      }
+
+      .form-input {
+        border-radius: 999px;
+        border: none;
+        padding: 8px 12px;
+        background: var(--card);
+        box-shadow: inset 2px 2px 4px var(--shadow-dark),
+          inset -2px -2px 4px var(--shadow-light);
+        outline: none;
+        font-size: 0.9rem;
+      }
+
+      .overlay-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        font-size: 0.8rem;
+      }
+
+      .link-btn {
+        border: none;
+        background: none;
+        padding: 0;
+        color: var(--accent);
+        cursor: pointer;
+        font-size: 0.8rem;
+        text-decoration: underline;
+      }
+
+      /* 작성 카드 전용 */
+      .editor-textarea {
+        width: 100%;
+        min-height: 150px;
+        border-radius: 18px;
+        border: none;
+        padding: 12px;
+        background: var(--card);
+        box-shadow: inset 3px 3px 6px var(--shadow-dark),
+          inset -3px -3px 6px var(--shadow-light);
+        outline: none;
+        resize: vertical;
+        font-size: 0.9rem;
+      }
+
+      .overlay-card.small {
+        max-width: 480px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <div class="app-title">숙제 게시판</div>
+        <div class="user-area">
+          <span id="user-info" class="user-label"></span>
+          <button id="btn-logout" class="btn btn-danger hidden">
+            로그아웃
+          </button>
+        </div>
+      </header>
+
+      <div id="message-box" class="message-box hidden"></div>
+
+      <!-- 툴바: 검색 + 새 글 버튼 -->
+      <section class="toolbar">
+        <input
+          id="search-userid"
+          class="input"
+          type="text"
+          placeholder="아이디로 검색"
+        />
+        <button id="btn-search" class="btn" title="검색">🔍</button>
+
+        <div class="toolbar-right">
+          <button id="btn-new-post" class="btn btn-accent">+ 새 글 작성</button>
+        </div>
+      </section>
+
+      <!-- 포스트 목록 -->
+      <section id="post-list" class="post-list"></section>
+    </div>
+
+    <!-- 로그인 / 회원가입 / 작성 오버레이 (하나만 항상 보이게 JS로 제어) -->
+    <div id="overlay-root" class="overlay-container hidden">
+      <div class="overlay-backdrop"></div>
+
+      <!-- 로그인 카드 -->
+      <div id="login-card" class="overlay-card hidden">
+        <h2 class="overlay-title">로그인</h2>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-userid">아이디</label>
+            <input
+              id="login-userid"
+              class="form-input"
+              type="text"
+              autocomplete="username"
+            />
+          </div>
+          <div class="form-group">
+            <label for="login-password">비밀번호</label>
+            <input
+              id="login-password"
+              class="form-input"
+              type="password"
+              autocomplete="current-password"
+            />
+          </div>
+          <button type="submit" class="btn btn-accent" style="width: 100%">
+            로그인
+          </button>
+        </form>
+        <div class="overlay-footer">
+          <span>처음이야?</span>
+          <button id="to-signup" class="link-btn" type="button">
+            회원가입 하러가기
+          </button>
+        </div>
+      </div>
+
+      <!-- 회원가입 카드 -->
+      <div id="signup-card" class="overlay-card hidden">
+        <h2 class="overlay-title">회원가입</h2>
+        <form id="signup-form">
+          <div class="form-group">
+            <label for="signup-userid">아이디</label>
+            <input id="signup-userid" class="form-input" type="text" />
+          </div>
+          <div class="form-group">
+            <label for="signup-password">비밀번호</label>
+            <input
+              id="signup-password"
+              class="form-input"
+              type="password"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-name">이름</label>
+            <input id="signup-name" class="form-input" type="text" />
+          </div>
+          <div class="form-group">
+            <label for="signup-email">이메일</label>
+            <input id="signup-email" class="form-input" type="email" />
+          </div>
+          <button type="submit" class="btn btn-accent" style="width: 100%">
+            회원가입
+          </button>
+        </form>
+        <div class="overlay-footer">
+          <span>이미 계정이 있어?</span>
+          <button id="to-login" class="link-btn" type="button">
+            로그인 하러가기
+          </button>
+        </div>
+      </div>
+
+      <!-- 포스트 작성/수정 카드 -->
+      <div id="post-editor-card" class="overlay-card small hidden">
+        <h2 id="post-editor-title" class="overlay-title">새 글 작성</h2>
+        <form id="post-editor-form">
+          <input id="post-id" type="hidden" />
+          <div class="form-group">
+            <label for="post-text">내용</label>
+            <textarea
+              id="post-text"
+              class="editor-textarea"
+              placeholder="무슨 이야기를 나누고 싶어?"
+            ></textarea>
+          </div>
+          <div
+            style="
+              display: flex;
+              justify-content: flex-end;
+              gap: 8px;
+              margin-top: 8px;
+            "
+          >
+            <button
+              type="button"
+              id="btn-editor-cancel"
+              class="btn"
+              style="min-width: 80px"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              class="btn btn-accent"
+              style="min-width: 80px"
+            >
+              저장
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="../js/main.js"></script>
+  </body>
+</html>
