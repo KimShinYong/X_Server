@@ -36,9 +36,9 @@ export async function signup(req, res, next) {
   });
 
   // 토큰 생성
-  const token = await createJwtToken(user.id);
+  const token = await createJwtToken(user);
   // console.log(token);
-  res.status(201).json({ user: user, token: token });
+  res.status(201).json({ token, userid });
 }
 
 // 로그인 함수
@@ -59,7 +59,7 @@ export async function login(req, res, next) {
 
   // 토큰 생성
   const token = await createJwtToken(user.id);
-  res.status(200).json({ user, token });
+  res.status(200).json({ token, userid });
 }
 
 // 로그인 유지 함수
